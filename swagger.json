@@ -1,0 +1,709 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Lottery API",
+    "description": "Test API document",
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "basePath": "/api/v1",
+  "tags": [
+    {
+      "name": "User Authentication",
+      "description": "API for managing players & agents authentication"
+    },
+    {
+      "name": "User Account",
+      "description": "APIs for managing player accounts"
+    }
+  ],
+  "schemes": ["https", "http"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "paths": {
+    "/health-check": {
+      "get": {
+        "summary": "Gets status of server",
+        "tags": ["General APIs"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authentication",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Server is running"
+          },
+          "500": {
+            "description": "Error that may occur due to server error",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "default": "error"
+                },
+                "responsecode": {
+                  "type": "number",
+                  "default": "500"
+                },
+                "responsemessage": {
+                  "type": "string",
+                  "default": "An error occured"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/signup": {
+      "post": {
+        "summary": "Create a new user/player",
+        "tags": ["User Authentication"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User object that will be supplied",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/User"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "default": "error"
+                },
+                "responsecode": {
+                  "type": "number",
+                  "default": "500"
+                },
+                "responsemessage": {
+                  "type": "string",
+                  "default": "An error occured"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Player & Agent login endpoint",
+        "tags": ["User Authentication"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "User object that will be supplied",
+            "required": true,
+            "schema": {
+              "required": ["email", "password"],
+              "properties": {
+                "email": {
+                  "type": "string"
+                },
+                "password": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error",
+            "schema": {
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "default": "error"
+                },
+                "responsecode": {
+                  "type": "number",
+                  "default": "500"
+                },
+                "responsemessage": {
+                  "type": "string",
+                  "default": "An error occured"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/validate-token": {
+      "get": {
+        "summary": "user jwt token validation endpoint",
+        "tags": ["General APIs"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "token",
+            "type": "string",
+            "description": "token string to validate",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/auth/reset-password": {
+      "post": {
+        "summary": "Request for a password reset",
+        "tags": ["User Authentication"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Request object that will be supplied",
+            "required": true,
+            "schema": {
+              "required": ["email"],
+              "properties": {
+                "email": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/auth/update-password": {
+      "put": {
+        "summary": "Update password endpoint",
+        "tags": ["User Authentication"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Request object that will be supplied",
+            "required": true,
+            "schema": {
+              "required": ["token", "newPassword", "confirmPassword"],
+              "properties": {
+                "token": {
+                  "type": "string"
+                },
+                "newPassword": {
+                  "type": "string"
+                },
+                "confirmPassword": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/fetch-users": {
+      "get": {
+        "summary": "Get a list of all users. Can apply filters to results",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "type": "string",
+            "description": "Token authorization to pass with the request",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "default": 1,
+            "type": "number",
+            "description": "pagination parameter",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "type": "number",
+            "default": 10,
+            "description": "number of results displayed per page",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "type": "string",
+            "description": "search player's (userId, name, username)",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "type": "boolean",
+            "description": "status parameter",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "role",
+            "type": "string",
+            "description": "filter results by user roles.",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "minWalletBalance",
+            "default": 1,
+            "type": "number",
+            "description": "minimum wallet balance filter parameter",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "maxWalletBalance",
+            "type": "number",
+            "default": 100000,
+            "description": "maximum wallet balance filter parameter",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "minCreateDate",
+            "type": "string",
+            "description": "Minimum creation date range of user",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "maxCreateDate",
+            "type": "string",
+            "description": "Maximum creation date range of user",
+            "required": false
+          },
+          {
+            "in": "query",
+            "name": "lastLoginDate",
+            "type": "string",
+            "default": "06/04/2020",
+            "description": "Filter by users last login date",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/fetch-user/{userId}": {
+      "get": {
+        "summary": "Gets a single user",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "type": "string",
+            "description": "Token authorization to pass with the request",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "userId",
+            "type": "string",
+            "description": "Request object that will be supplied",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched successfully"
+          },
+          "400": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/fetch-authenticated-user": {
+      "get": {
+        "summary": "Gets the details of the current authenticated user",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "type": "string",
+            "description": "Token authorization to pass with the request",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fetched successfully"
+          },
+          "400": {
+            "description": "User not found"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/update-user/{userId}": {
+      "put": {
+        "summary": "Update user profile details",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "type": "string",
+            "description": "Token authorization to pass with the request",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "userId",
+            "type": "string",
+            "description": "Unique user uuid string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Request object with fields to be updated",
+            "required": true,
+            "schema": {
+              "properties": {
+                "phone": {
+                  "type": "string",
+                  "default": "0901234567"
+                },
+                "firstname": {
+                  "type": "string"
+                },
+                "lastname": {
+                  "type": "string"
+                },
+                "bankCode": {
+                  "type": "string",
+                  "default": "058"
+                },
+                "accountName": {
+                  "type": "string",
+                  "default": "John Doe"
+                },
+                "accountNumber": {
+                  "type": "string",
+                  "default": "0123456789"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Created Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/toggle-account-status": {
+      "post": {
+        "summary": "Activates or deactivates a user",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "authorization",
+            "type": "string",
+            "description": "Token authorization to pass with the request",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Request object with roles to be added",
+            "required": true,
+            "schema": {
+              "required": ["status", "userId"],
+              "properties": {
+                "status": {
+                  "type": "boolean",
+                  "default": false
+                },
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Activated/Deactivated Successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/send-verification-email": {
+      "post": {
+        "summary": "Send email verification to user",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "x-api-key",
+            "type": "string",
+            "description": "API key for authorization",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Request object that will be supplied",
+            "required": true,
+            "schema": {
+              "required": ["userId"],
+              "properties": {
+                "userId": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Email sent successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    },
+    "/user/verify-email": {
+      "get": {
+        "summary": "Marks a users email as verified when called",
+        "tags": ["User Account"],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "userId",
+            "type": "string",
+            "description": "Unique user uuid string",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "verificationCode",
+            "type": "string",
+            "description": "Automatically generated verification code string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Verified successfully"
+          },
+          "500": {
+            "description": "Error that may occur due to server error"
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "User": {
+      "required": [
+        "firstname",
+        "lastname",
+        "email",
+        "phone",
+        "password",
+        "confirmPassword"
+      ],
+      "properties": {
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "confirmPassword": {
+          "type": "string"
+        },
+        "referralCode": {
+          "type": "string"
+        }
+      }
+    },
+    "Admin": {
+      "required": [
+        "firstname",
+        "lastname",
+        "email",
+        "role",
+        "password",
+        "confirmPassword"
+      ],
+      "properties": {
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "confirmPassword": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        }
+      }
+    },
+    "Agent": {
+      "required": [
+        "firstname",
+        "lastname",
+        "email",
+        "role",
+        "password",
+        "confirmPassword"
+      ],
+      "properties": {
+        "firstname": {
+          "type": "string"
+        },
+        "lastname": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "password": {
+          "type": "string"
+        },
+        "confirmPassword": {
+          "type": "string"
+        },
+        "role": {
+          "type": "string"
+        },
+        "referredBy": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
