@@ -11,20 +11,85 @@ const timezone = require("dayjs/plugin/timezone"); // dependent on utc plugin
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
+const DEFAULT_FILTERS = {
+  page: 1,
+  limit: 10,
+  startDate: new Date(1920, 0, 1, 24).toISOString(),
+  minWalletBalance: 0,
+  maxWalletBalance: 1e20,
+  order: ["createdAt:DESC"], // Sort by latest
+};
+
+/**
+ *
+ * @param {*} n
+ * @returns {number}
+ */
+const factorial = (n) => {
+  if (n <= 1) return 1;
+  return n * factorial(n - 1);
+};
+
+/**
+ * A helper method for sorting array of objects using QuickSort Algorithm
+ * @param {*} array
+ * @param {*} propName
+ * @param {*} isReversed
+ * @returns {Array<any>}
+ */
+const sortArrayOfObjects = (array, propName, isReversed = false) => {
+  const X = array[0];
+  const leftArray = [];
+  const rightArray = [];
+
+  for (let i = 0; i < array.length; i += 1) {
+    if (i !== 0) {
+      const condition = !isReversed
+        ? array[i][propName] < X[propName]
+        : array[i][propName] > X[propName];
+
+      if (condition) leftArray.push(array[i]);
+      else rightArray.push(array[i]);
+    }
+  }
+
+  if (leftArray.length <= 1 && rightArray.length <= 1) {
+    return X ? [...leftArray, X, ...rightArray] : [...leftArray, ...rightArray];
+  }
+
+  return [
+    ...sortArrayOfObjects(leftArray, propName, isReversed),
+    X,
+    ...sortArrayOfObjects(rightArray, propName, isReversed),
+  ];
+};
+
+/**
+ *
+ * @param {any[]} array
+ * @param {number} subarraySize
+ * @returns {any[][]}
+ */
+function subdivideArray(array, subarraySize) {
+  const sub = array.flat().slice(0, subarraySize);
+  const remArray = array.flat().slice(subarraySize);
+  // console.log(sub, remArray);
+
+  if (remArray.length === 0 || remArray.length <= subarraySize) {
+    return [sub, remArray];
+  }
+
+  // return [sub, remArray];
+  return [sub].concat(subdivideArray(remArray, subarraySize));
+}
+
 const HelperUtils = {
-  DEFAULT_FILTERS: {
-    page: 1,
-    limit: 10,
-    startDate: new Date(1920, 0, 1, 24).toISOString(),
-    minWalletBalance: 0,
-    maxWalletBalance: 1e20,
-    order: ["createdAt:DESC"], // Sort by latest
-  },
+  DEFAULT_FILTERS,
   /**
    * A helper print function for printing to the console based on the NODE_ENV
    * @param {*} content
    * @param {{
-   *  type?: "info" | "error";
+   *  type?: "info" | "error" | "fatal" | "warn" | "debug" | "trace";
    *  logging?: boolean;
    *  colorize?: boolean;
    * } | undefined} options
@@ -92,7 +157,7 @@ const HelperUtils = {
           console.error(content);
           break;
 
-        case !!options && options.type === "info":
+        case !!options && options?.type === "info":
         default:
           // eslint-disable-next-line no-console
           console.info(content);
@@ -158,7 +223,7 @@ const HelperUtils = {
    * @param {string} characters A string of characters to randomize from. Example: 'AaBbcC01234'
    * @returns string
    */
-  generateRandomCharacters(length, options = {}, characters = null) {
+  generateRandomCharacters(length, options = {}, characters = "") {
     let randomChar = "";
     let CHARACTERS = characters
       || "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789";
@@ -205,7 +270,12 @@ const HelperUtils = {
 
     return randomChar;
   },
-
+  /**
+   *
+   * @param {string | Date} specifiedDate
+   * @param {*} removeSeconds
+   * @returns
+   */
   isCurrentDateGreaterThanSpecifiedDate(specifiedDate, removeSeconds = true) {
     if (!specifiedDate) return false;
 
@@ -220,7 +290,7 @@ const HelperUtils = {
       specifiedDate.getHours(),
       specifiedDate.getMinutes(),
       removeSeconds ? 0 : specifiedDate.getSeconds(),
-      removeSeconds ? 0 : specifiedDate.getMilliseconds(),
+      removeSeconds ? 0 : specifiedDate.getMilliseconds()
     );
 
     // Remove current date 'seconds'
@@ -231,7 +301,7 @@ const HelperUtils = {
       currDate.getHours(),
       currDate.getMinutes(),
       removeSeconds ? 0 : currDate.getSeconds(),
-      removeSeconds ? 0 : currDate.getMilliseconds(),
+      removeSeconds ? 0 : currDate.getMilliseconds()
     );
 
     return currDate.getTime() >= specifiedDate.getTime();
@@ -245,6 +315,7 @@ const HelperUtils = {
     let momentDateObj = null;
     const track = {
       before: new Date().toString(),
+      after: "",
     };
 
     if (date) {
@@ -266,6 +337,7 @@ const HelperUtils = {
     let momentDateObj = null;
     const track = {
       before: new Date().toString(),
+      after: "",
     };
 
     if (date) {
@@ -289,9 +361,10 @@ const HelperUtils = {
       : dayjs(date).tz("Africa/Lagos");
     return customizeDate;
   },
-
   /**
    *
+   * @param {Date | number | null} date
+   * @returns {number}
    */
   getMillisecondsInUTC(date = null) {
     const currentTime = !!date && (typeof date === "number" || date instanceof Date)
@@ -358,9 +431,9 @@ const HelperUtils = {
       return null;
     }
 
-    const retObject = content.find(
-      (eachProp) => eachProp.name === keyOfSetting || eachProp.varName === keyOfSetting
-    );
+    const retObject = content.find((/** @type {{ name: any; varName: any; }} */ eachProp) => (
+      eachProp.name === keyOfSetting || eachProp.varName === keyOfSetting
+    ));
     if (retObject && retObject.value) {
       return retObject.value;
     }
@@ -373,6 +446,7 @@ const HelperUtils = {
    */
   checkDailyWalletThreshold(user) {
     const d = this.customDate2();
+    /** @type {number | moment.Moment} */
     let lastLoggedIn = this.customDate2(user.lastLogin);
 
     const today = new Date(d.year(), d.month(), d.date(), 0, 0, 0).getTime();
@@ -392,19 +466,21 @@ const HelperUtils = {
   },
 
   /**
-   * @param {Object} query
-   * @returns String
+   *
+   * @param {*} array
+   * @returns
    */
   arrayToCSV(array) {
-    const objectToCSVRow = (dataObject) => {
+    const objectToCSVRow = (/** @type {string[]} */ dataObject) => {
+      /** @type {string[]} */
       const dataArray = [];
       Object.keys(dataObject).forEach((o) => {
+        // @ts-ignore
         const innerValue = dataObject[o] === null ? "" : dataObject[o].toString();
         const result = `${innerValue.replace(/"/g, '""')}`;
         dataArray.push(result);
       });
-      // for (const o in dataObject) {
-      // }
+
       const fresult = `${dataArray.join(",")}\r\n`;
       return fresult;
     };
@@ -414,7 +490,7 @@ const HelperUtils = {
     let csvContent = "data:text/csv;charset=utf-8,";
     // headers
     csvContent += objectToCSVRow(Object.keys(array[0]));
-    array.forEach((item) => {
+    array.forEach((/** @type {any} */ item) => {
       csvContent += objectToCSVRow(item);
     });
 
@@ -444,276 +520,209 @@ const HelperUtils = {
   },
 };
 
-/**
- *
- * @param {*} n
- * @returns Number
- */
-const factorial = (n) => {
-  if (n <= 1) return 1;
-  return n * factorial(n - 1);
-};
-
-/**
- * A helper method for sorting array of objects using QuickSort Algorithm
- * @param {*} array
- * @param {*} propName
- * @param {*} isReversed
- * @returns Array
- */
-const sortArrayOfObjects = (array, propName, isReversed = false) => {
-  const X = array[0];
-  const leftArray = [];
-  const rightArray = [];
-
-  for (let i = 0; i < array.length; i += 1) {
-    if (i !== 0) {
-      const condition = !isReversed
-        ? array[i][propName] < X[propName]
-        : array[i][propName] > X[propName];
-
-      if (condition) leftArray.push(array[i]);
-      else rightArray.push(array[i]);
-    }
-  }
-
-  if (leftArray.length <= 1 && rightArray.length <= 1) {
-    return X ? [...leftArray, X, ...rightArray] : [...leftArray, ...rightArray];
-  }
-
-  return [
-    ...sortArrayOfObjects(leftArray, propName, isReversed),
-    X,
-    ...sortArrayOfObjects(rightArray, propName, isReversed),
-  ];
-};
-
-/**
- *
- * @param {Array} array
- * @param {number} subarraySize
- * @returns
- */
-function subdivideArray(array, subarraySize) {
-  const sub = array.flat().slice(0, subarraySize);
-  const remArray = array.flat().slice(subarraySize);
-  // console.log(sub, remArray);
-
-  if (remArray.length === 0 || remArray.length <= subarraySize) {
-    return [sub, remArray];
-  }
-
-  // return [sub, remArray];
-  return [sub].concat(subdivideArray(remArray, subarraySize));
-}
-
-/**
- *
- * @param {*} n
- * @param {*} k
- * @returns Number
- */
-HelperUtils.combination = (n, k) => factorial(n) / (factorial(n - k) * factorial(k));
-
-/**
- *
- * @param {Date} date
- */
-HelperUtils.formatDateAsTime = (date = null) => {
-  const currentDate = date ? new Date(date) : HelperUtils.customDate2();
-  return `${HelperUtils.convertToDoubleDigits(
-    currentDate.getHours()
-  )}:${HelperUtils.convertToDoubleDigits(
-    currentDate.getMinutes()
-  )}:${HelperUtils.convertToDoubleDigits(currentDate.getSeconds())}`;
-};
-
-/**
- * A helper method for generating a transaction referenceId
- * @returns string
- */
-HelperUtils.generateReferenceId = () => {
-  const currentTimeMS = new Date().getTime();
-  return `TREF-${currentTimeMS
-    .toString()
-    .slice(
-      currentTimeMS.toString().length - 4
-    )}${HelperUtils.generateRandomCharacters(6)}`;
-};
-
-/**
- * A helper method for generating a unique bundle id
- * @returns string
- */
-HelperUtils.generateBundleId = () => {
-  const currentTimeMS = Date.now().toString();
-  return `BUNDLE-${HelperUtils.generateRandomCharacters(4, {
-    uppercase: true,
-    alphabetsOnly: true
-  })}${currentTimeMS.slice(7)}`;
-};
-
-/**
- * A helper method for generating random characters and symbols for password
- * @returns string
- */
-HelperUtils.generateRandomPassword = () => {
-  const length = Math.round(Math.random() * 4) + 8; // 8 to 12
-  const CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789!@#$%&|?=";
-
-  return HelperUtils.generateRandomCharacters(length, {}, CHARACTERS);
-};
-
-/**
- * A helper method for generating Api keys
- * @returns string
- */
-HelperUtils.generateApiKey = (prefix = "", options = {}) => {
-  const length = 32;
-  options = {
-    prefix,
-    splitBy: "-",
-    splitInterval: 6,
-    ...options,
-  };
-
-  return HelperUtils.generateRandomCharacters(length, options);
-};
-
-/**
- *
- * @param {*} timeString
- * @param {*} dateReference
- * @returns {string}
- */
-HelperUtils.timeStringToDate = (timeString, dateReference = new Date()) => {
-  const d = HelperUtils.customDate(dateReference);
-  if (timeString) {
-    const [hour, minutes, second] = timeString.split(":");
-    const date = new Date(
-      d.year(),
-      d.month(),
-      d.date(),
-      hour || 0,
-      minutes || 0,
-      second || 0
-    );
-    return date;
-  }
-
-  return new Date(
-    d.year(),
-    d.month(),
-    d.date(),
-    d.hour(),
-    d.minute(),
-    d.second()
-  );
-};
-
-/**
- *
- * @param {*} timeString
- * @param {*} dateReference
- * @returns {string}
- */
-HelperUtils.timeStringToDate2 = (timeString, dateReference = new Date()) => {
-  const d = HelperUtils.customDate2(dateReference);
-  if (timeString) {
-    const [hour, minutes, second] = timeString.split(":");
-    const date = new Date(
-      d.year(),
-      d.month(),
-      d.date(),
-      hour || 0,
-      minutes || 0,
-      second || 0
-    );
-    return date;
-  }
-
-  return new Date(
-    d.year(),
-    d.month(),
-    d.date(),
-    d.hour(),
-    d.minute(),
-    d.second()
-  );
-};
-
-/**
- * @param {{[x: string]: any}} query
- * @returns {[x: string]: any}
- */
-HelperUtils.mapAsFilter = (query) => {
-  const userFilters = query;
-  HelperUtils.DEFAULT_FILTERS.endDate = HelperUtils.customDate2().toISOString();
-
-  // Remove duplicate keys
-  const newSet = new Set(Object.keys(userFilters));
-  let date;
-  let month;
-  let year;
-
-  Array.from(newSet).forEach((param) => {
-    if (Array.isArray(userFilters[param])) {
-      [userFilters[param]] = userFilters[param];
-    }
-
-    switch (true) {
-      // If query parameter includes a comma or param is 'order', turn to array
-      case param === "order" || userFilters[param]?.includes(","):
-        userFilters[param] = userFilters[param]
-          .split(",")
-          .map((eachValue) => eachValue.trim())
-          .filter((value) => value !== "");
-        break;
-
-      case param === "startDate"
-        || param === "endDate"
-        || param === "minCreateDate"
-        || param === "maxCreateDate":
-        ([date, month, year] = userFilters[param].split("/"));
-        userFilters[param] = HelperUtils.customDate2(
-          new Date(year, month - 1, date, 24)
-        ).toISOString();
-        break;
-
-      // D
-      case param === "startTime" || param === "endTime":
-        userFilters[param] = userFilters[param].trim();
-        break;
-
-      // H
-      case param !== "search" && !!userFilters[param]?.match(/^(\d+)$/g):
-        userFilters[param] = parseInt(userFilters[param], 10);
-        break;
-
-      // H
-      case userFilters[param]?.match(/false|true/gi) !== null:
-        userFilters[param] = JSON.parse(
-          `${userFilters[param]}`.toLowerCase().trim()
-        );
-        break;
-
-      default:
-        break;
-    }
-  });
-
-  // Merge Default filters and user filters
-  const filters = { ...HelperUtils.DEFAULT_FILTERS, ...userFilters };
-  // HelperUtils.printToFile(filters);
-  return filters;
-};
-
+// @ts-ignore
 HelperUtils.DEFAULT_FILTERS.endDate = HelperUtils.customDate2().toISOString();
 
-HelperUtils.factorial = factorial;
+module.exports = {
+  ...HelperUtils,
+  factorial,
+  sortArrayOfObjects,
+  subdivideArray,
+  /**
+ *
+ * @param {Date | null} date
+ */
+  formatDateAsTime: (date = null) => {
+    const currentDate = date ? new Date(date) : HelperUtils.customDate2();
+    return `${HelperUtils.convertToDoubleDigits(
+      // @ts-ignore
+      currentDate.getHours()
+    )}:${HelperUtils.convertToDoubleDigits(
+      // @ts-ignore
+      currentDate.getMinutes()
+    // @ts-ignore
+    )}:${HelperUtils.convertToDoubleDigits(currentDate.getSeconds())}`;
+  },
+  /**
+   * A helper method for generating a transaction referenceId
+   * @returns string
+   */
+  generateReferenceId: () => {
+    const currentTimeMS = new Date().getTime();
+    return `TREF-${currentTimeMS
+      .toString()
+      .slice(
+        currentTimeMS.toString().length - 4
+      )}${HelperUtils.generateRandomCharacters(6)}`;
+  },
+  /**
+   * A helper method for generating a unique bundle id
+   * @returns string
+   */
+  generateBundleId: () => {
+    const currentTimeMS = Date.now().toString();
+    return `BUNDLE-${HelperUtils.generateRandomCharacters(4, {
+      uppercase: true,
+      alphabetsOnly: true,
+    })}${currentTimeMS.slice(7)}`;
+  },
+  /**
+   * A helper method for generating random characters and symbols for password
+   * @returns string
+   */
+  generateRandomPassword: () => {
+    const length = Math.round(Math.random() * 4) + 8; // 8 to 12
+    const CHARACTERS = "AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz0123456789!@#$%&|?=";
 
-HelperUtils.sortArrayOfObjects = sortArrayOfObjects;
+    return HelperUtils.generateRandomCharacters(length, {}, CHARACTERS);
+  },
+  /**
+   * A helper method for generating Api keys
+   * @returns string
+   */
+  generateApiKey: (prefix = "", options = {}) => {
+    const length = 32;
+    options = {
+      prefix,
+      splitBy: "-",
+      splitInterval: 6,
+      ...options,
+    };
 
-HelperUtils.subdivideArray = subdivideArray;
+    return HelperUtils.generateRandomCharacters(length, options);
+  },
+  /**
+   *
+   * @param {*} n
+   * @param {*} k
+   * @returns Number
+   */
+  combination: (n, k) => factorial(n) / (factorial(n - k) * factorial(k)),
+  /**
+   * @param {{[x: string]: any}} query
+   * @returns {{[x: string]: any}}
+   */
+  mapAsFilter: (query) => {
+    const userFilters = query;
+    // @ts-ignore
+    HelperUtils.DEFAULT_FILTERS.endDate = HelperUtils.customDate2().toISOString();
 
-module.exports = HelperUtils;
+    // Remove duplicate keys
+    const newSet = new Set(Object.keys(userFilters));
+    let date;
+    let month;
+    let year;
+
+    Array.from(newSet).forEach((param) => {
+      if (Array.isArray(userFilters[param])) {
+        [userFilters[param]] = userFilters[param];
+      }
+
+      switch (true) {
+        // If query parameter includes a comma or param is 'order', turn to array
+        case param === "order" || userFilters[param]?.includes(","):
+          userFilters[param] = userFilters[param]
+            .split(",")
+            .map((/** @type {string} */ eachValue) => eachValue.trim())
+            .filter((/** @type {string} */ value) => value !== "");
+          break;
+
+        case param === "startDate"
+          || param === "endDate"
+          || param === "minCreateDate"
+          || param === "maxCreateDate":
+          [date, month, year] = userFilters[param].split("/");
+          userFilters[param] = HelperUtils.customDate2(
+            // @ts-ignore
+            new Date(year, month - 1, date, 24)
+          ).toISOString();
+          break;
+
+        // D
+        case param === "startTime" || param === "endTime":
+          userFilters[param] = userFilters[param].trim();
+          break;
+
+        // H
+        case param !== "search" && !!userFilters[param]?.match(/^(\d+)$/g):
+          userFilters[param] = parseInt(userFilters[param], 10);
+          break;
+
+        // H
+        case userFilters[param]?.match(/false|true/gi) !== null:
+          userFilters[param] = JSON.parse(
+            `${userFilters[param]}`.toLowerCase().trim()
+          );
+          break;
+
+        default:
+          break;
+      }
+    });
+
+    // Merge Default filters and user filters
+    const filters = { ...HelperUtils.DEFAULT_FILTERS, ...userFilters };
+    // HelperUtils.printToFile(filters);
+    return filters;
+  },
+  /**
+   *
+   * @param {*} timeString
+   * @param {*} dateReference
+   * @returns {string | Date}
+   */
+  timeStringToDate: (timeString, dateReference = new Date()) => {
+    const d = HelperUtils.customDate(dateReference);
+    if (timeString) {
+      const [hour, minutes, second] = timeString.split(":");
+      const date = new Date(
+        d.year(),
+        d.month(),
+        d.date(),
+        hour || 0,
+        minutes || 0,
+        second || 0
+      );
+      return date;
+    }
+
+    return new Date(
+      d.year(),
+      d.month(),
+      d.date(),
+      d.hour(),
+      d.minute(),
+      d.second()
+    );
+  },
+  /**
+   *
+   * @param {*} timeString
+   * @param {*} dateReference
+   * @returns {string | Date}
+   */
+  timeStringToDate2: (timeString, dateReference = new Date()) => {
+    const d = HelperUtils.customDate2(dateReference);
+    if (timeString) {
+      const [hour, minutes, second] = timeString.split(":");
+      const date = new Date(
+        d.year(),
+        d.month(),
+        d.date(),
+        hour || 0,
+        minutes || 0,
+        second || 0
+      );
+      return date;
+    }
+
+    return new Date(
+      d.year(),
+      d.month(),
+      d.date(),
+      d.hour(),
+      d.minute(),
+      d.second()
+    );
+  }
+};

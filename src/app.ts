@@ -1,12 +1,14 @@
-require('dotenv').config();
+import { Errback, NextFunction, Request, Response } from "express";
+
+require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
 const cookieParser = require("cookie-parser");
 const swaggerUi = require("swagger-ui-express");
-const morgan = require('morgan');
+const morgan = require("morgan");
 
-const indexRouter = require("./routes/index");
+const indexRouter = require("./routes");
 
 const ErrorHandler = require("./error-helpers/ErrorHandler");
 const HttpStatusCode = require("./error-helpers/Statuscode");
@@ -21,7 +23,7 @@ const app = express();
 
 // app.use(expressMonitor());
 // Add stream option to morgan
-app.use(morgan('combined', { stream: wiston.stream }));
+app.use(morgan("combined", { stream: wiston.stream }));
 // app.use(pino());
 app.use(
   express.json({
@@ -40,7 +42,7 @@ app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 app.use("/api/v1", indexRouter);
 
 // catch 404 and forward to error handler
-app.all("/*", (req, res) => {
+app.all("/*", (req: Request, res: Response & { message?: string }) => {
   wiston.error(
     `404 -${res.message || "Route not found"} - ${req.originalUrl} - ${
       req.method
@@ -68,29 +70,37 @@ process.on("uncaughtException", (error) => {
 });
 
 // error handler
-app.use(async (err, req, res, next) => {
-  // eslint-disable-next-line no-console
-  console.log(err);
-  if (err instanceof Error) {
-    wiston.error(
-      `${err.status || HttpStatusCode.INTERNAL_SERVER} - ${err.message} - ${
-        req.originalUrl
-      } - ${req.method} - ${req.ip}`
-    );
+app.use(
+  async (
+    err: Errback & { status: string },
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) => {
+    // eslint-disable-next-line no-console
+    console.log(err);
+    if (err instanceof Error) {
+      wiston.error(
+        `${err.status || HttpStatusCode.INTERNAL_SERVER} - ${err.message} - ${
+          req.originalUrl
+        } - ${req.method} - ${req.ip}`
+      );
 
-    if (ErrorHandler.isTrustedError(err)) {
-      return ErrorHandler.handleTrustedError(err, res);
+      if (ErrorHandler.isTrustedError(err)) {
+        return ErrorHandler.handleTrustedError(err, res);
+      }
+
+      if (ErrorHandler.isAxiosError) {
+        return ErrorHandler.handleAxiosError(err, res);
+      }
+
+      // what do we do when error is not operational
+      return ErrorHandler.handleGeneralErrors(err, res);
     }
 
-    if (ErrorHandler.isAxiosError) {
-      return ErrorHandler.handleAxiosError(err, res);
-    }
-
-    // what do we do when error is not operational
-    return ErrorHandler.handleGeneralErrors(err, res);
+    return next(err);
   }
-
-  return next(err);
-});
+);
 
 module.exports = app;
+export {};

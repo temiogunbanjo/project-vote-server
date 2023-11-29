@@ -4,9 +4,7 @@ const Access = require("../core/roles/AccessHandler");
 const ph = require("../utils/hash");
 const HelperUtils = require("../utils/HelperUtils");
 
-const {
-  SUPER_AGENT, PRINCIPAL_AGENT, ORDINARY_AGENT, CASHIER, PLAYER
-} = Access.APP_ROLES;
+const { PLAYER } = Access.APP_ROLES;
 
 /**
  * @class
@@ -19,8 +17,8 @@ class User {
    * @param {string} email
    * @param {string} phone
    * @param {string} password
-   * @param {Array} role
-   * @param {string} referredBy
+   * @param {string} role
+   * @param {string | null} referredBy
    */
   constructor(
     firstname,
@@ -50,27 +48,6 @@ class User {
     this.referredBy = referredBy;
     this.canCreateRole = null;
     this.maxCreateCount = null;
-
-    switch (role) {
-      case PRINCIPAL_AGENT.name:
-        this.referredBy = null;
-        this.maxCreateCount = 100;
-        this.canCreateRole = SUPER_AGENT.name;
-        break;
-
-      case SUPER_AGENT.name:
-        this.maxCreateCount = 50;
-        this.canCreateRole = ORDINARY_AGENT.name;
-        break;
-
-      case ORDINARY_AGENT.name:
-        this.maxCreateCount = 20;
-        this.canCreateRole = CASHIER.name;
-        break;
-
-      default:
-        break;
-    }
   }
 }
 

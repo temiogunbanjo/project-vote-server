@@ -1,0 +1,117 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+enum Availability {
+  STUDENTS
+  NONSTUDENTS
+  EVERYONE
+}
+
+enum PaymentType {
+  PAID
+  UNPAID
+}
+
+enum Schools {
+  MEDIA
+  FASHION
+  COSMETOLOGY
+  CATERING
+  HEALTH
+  TECHNOLOGY
+}
+
+model VoteDetails {
+  id            String     @id @default(uuid()) @map("_id")
+  candidateName String
+  eventName     String
+  variables     Variables?
+}
+
+model Variables {
+  id            String      @id @default(uuid()) @map("_id")
+  messageId     String
+  voteDetails   VoteDetails @relation(fields: [voteDetailsId], references: [id], onDelete: Cascade)
+  voteDetailsId String      @unique
+  user          Users?
+}
+
+model Users {
+  id             String    @id @default(uuid()) @map("_id")
+  fullname       String
+  whatsappNumber String
+  variables      Variables @relation(fields: [variablesId], references: [id], onDelete: Cascade)
+  variablesId    String    @unique
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+model Candidates {
+  id             String   @id @default(uuid()) @map("_id")
+  fullname       String
+  imageUrl       String
+  totalVoteCount Int      @default(0)
+  code           Int      @unique
+  event          Events   @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId        String
+  votes          Votes[]
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model SchoolNames {
+  id    String  @id @default(uuid()) @map("_id")
+  name  String
+}
+
+model Events {
+  id           String @id @default(uuid()) @map("_id")
+  name         String @unique
+  school       Schools
+  availability Availability
+  paymentType  PaymentType
+  candidates   Candidates[]
+  pricePerVote Int // In GHc     
+  votes        Votes[]
+  ongoing      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Students {
+  id        Int      @id @map("_id")
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Votes {
+  id          String      @id @default(uuid()) @map("_id")
+  studentId   Int?
+  userId      String?
+  voteCount   Int
+  candidate   Candidates? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
+  candidateId String
+  event       Events?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId     String
+  payment     Payments? 
+  createdAt   DateTime    @default(now())
+}
+
+model Payments {
+  id        String   @id @map("_id")
+  amount    Int
+  vote      Votes?   @relation(fields: [voteId], references: [id], onDelete: Cascade)
+  voteId    String   @unique
+  createdAt DateTime @default(now())
+}
+

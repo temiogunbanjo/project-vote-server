@@ -1,3 +1,5 @@
+import { AuthorizedRequest } from "../types";
+
 const fs = require("fs");
 const path = require("path");
 const multer = require("multer");
@@ -7,7 +9,7 @@ const HelperUtils = require("../utils/HelperUtils");
 
 if (!fs.existsSync("uploads")) {
   HelperUtils.print("uploads folder not found");
-  fs.mkdir("uploads", (err) => {
+  fs.mkdir("uploads", (err: Error) => {
     if (err) {
       wiston.error(err.message);
     }
@@ -15,13 +17,18 @@ if (!fs.existsSync("uploads")) {
 }
 
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
+  destination: (req: Request, file: Express.Multer.File, cb: Function) => {
     cb(null, "uploads");
   },
-  filename: (req, file, cb) => {
+  filename: (
+    req: Request & { user: { [x: string]: any } },
+    file: Express.Multer.File,
+    cb: Function
+  ) => {
     const splittedName = file.originalname.split(".");
-    const extension = splittedName.length > 1 ? splittedName[splittedName.length - 1] : "";
-    let uniqueSuffix = `${req.headers["content-length"]}`;
+    const extension =
+      splittedName.length > 1 ? splittedName[splittedName.length - 1] : "";
+    let uniqueSuffix = `${req.headers.get("content-length")}`;
 
     if (req.user?.adminId) {
       uniqueSuffix += `-${req.user?.adminId}`;
@@ -37,11 +44,11 @@ const storage = multer.diskStorage({
   },
 });
 
-const fileFilter = (req, file, cb) => {
+const fileFilter = (req: Request, file: Express.Multer.File, cb: Function) => {
   try {
     const imageFileSizeLimit = 2 * 1024 * 1024;
     const audioFileSizeLimit = 2 * 1024 * 1024;
-    const fileSize = parseInt(req.headers["content-length"], 10);
+    const fileSize = parseInt(req.headers.get("content-length") || '0', 10);
     // console.log(req);
 
     const supportedTypes = /jpeg|jpg|png|gif|mp3|mpeg|wav|csv/i;

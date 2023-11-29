@@ -1,10 +1,6 @@
-const DeviceDetector = require("node-device-detector");
-const DeviceHelper = require("node-device-detector/helper");
-
 const User = require("../schemas/UserSchema");
 
 const ph = require("../utils/hash");
-const { logAccess } = require("../middlewares/analytics");
 const TokenProcessor = require("../utils/tokenProcessor");
 const SendResponses = require("../utils/sendResponses");
 const Patterns = require("../templates/PatternTemplates");
@@ -17,17 +13,16 @@ const winston = require("../error-helpers/WistonLogger");
 const Access = require("../core/roles/AccessHandler");
 const PaymentHandler = require("../core/payment/PaymentHandler");
 
-const DataRepo = require("../database/DataRepo");
-const DataSource = require("../database/DataSource");
+const db = require("../database/db");
 
 const {
   createToken, verifyToken, createHashedToken, verifyHashedToken
 } = TokenProcessor;
 const { APP_ROLES, VALID_APP_ROLES } = Access;
 const { sendSuccessResponse, sendErrorResponse } = SendResponses;
-const { sendPushNotificationToTopic, sendEmail } = SendNotifications;
+const { sendEmail } = SendNotifications;
 const {
-  customDate, customDate2, formatDateAsTime, DEFAULT_FILTERS
+  customDate, customDate2, DEFAULT_FILTERS
 } = HelperUtils;
 
 const HtmlTemplates = require("../templates/HtmlTemplates");
@@ -40,22 +35,12 @@ const {
   SUSPENSION_TYPES,
   WALLET_TYPES,
   DRAW_METHODS,
-  gameCategoriesOptions,
   weekDayNames,
-  gameCategories,
   MAX_SELECTION_ALLOWED,
   WINNING_REDEMPTION_METHODS
 } = require("../globals");
 
-const deviceDetector = new DeviceDetector({
-  clientIndexes: true,
-  deviceIndexes: true,
-  deviceAliasCode: false,
-});
-
-const dataRepo = new DataRepo();
-const dataSource = new DataSource(dataRepo);
-const datasource = dataSource;
+const datasource = db;
 
 module.exports = {
   APP_ROLES,
@@ -71,8 +56,6 @@ module.exports = {
   MAX_SELECTION_ALLOWED,
   staticUploadPath,
   weekDayNames,
-  gameCategoriesOptions,
-  gameCategories,
   Patterns,
   HttpStatusCode,
   HtmlTemplates,
@@ -80,22 +63,18 @@ module.exports = {
   HelperUtils,
   customDate,
   customDate2,
-  formatDateAsTime,
   createToken,
   createHashedToken,
   verifyToken,
   verifyHashedToken,
   sendErrorResponse,
   sendSuccessResponse,
-  sendPushNotificationToTopic,
   sendEmail,
   winston,
-  logAccess,
   AccessHandler: Access,
   PaymentHandler,
   cloudUploader,
   User,
   datasource,
-  deviceDetector,
-  DeviceHelper,
 };
+export {};

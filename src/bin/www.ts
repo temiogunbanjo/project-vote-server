@@ -6,11 +6,8 @@ const app = require("../app");
 
 /**
  * Normalize a port into a number, string, or false.
- * @function
- * @param {val} val
- * @returns Number || Boolean
  */
-function normalizePort(val) {
+function normalizePort(val: string) {
   const port = parseInt(val, 10);
 
   if (Number.isNaN(port)) {
@@ -36,7 +33,7 @@ app.set("port", port);
  * Event listener for HTTP server "error" event.
  * @param {*} error
  */
-function onError(error) {
+function onError(error: any) {
   if (error.syscall !== "listen") {
     throw error;
   }

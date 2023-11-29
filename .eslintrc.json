@@ -16,6 +16,7 @@
     "quotes": "off",
     "no-shadow": ["error", { "allow": ["req", "res", "err"] }],
     "no-underscore-dangle": "off",
+    "linebreak-style": 0,
     "require-jsdoc": [
       "error",
       {
