@@ -31,23 +31,34 @@ module.exports = {
 
   /**
    *
-   * @param {Error} err
-   * @param {Response} res
+   * @param {BaseError} err
+   * @param {import("express").Response} res
    */
   async handleTrustedError(err, res) {
     if (err instanceof BaseError) {
-      await sendErrorResponse(res, err.httpCode, err.message);
+      await sendErrorResponse(res, Number(err.httpCode), err.message);
     }
   },
 
+  /**
+   *
+   * @param {import("axios").AxiosError} err
+   * @param {import("express").Response} res
+   * @returns
+   */
   handleAxiosError(err, res) {
     return sendErrorResponse(
       res,
-      err.response.status || HttpStatusCode.INTERNAL_SERVER,
+      err?.response?.status || HttpStatusCode.INTERNAL_SERVER,
       `[Axios]: ${err.message}`
     );
   },
-
+  /**
+   *
+   * @param {any} err
+   * @param {import("express").Response} res
+   * @returns
+   */
   handleGeneralErrors(err, res) {
     let responseMessage = "";
     const isTimedOut = err.message

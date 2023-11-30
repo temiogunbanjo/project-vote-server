@@ -1,10 +1,9 @@
 /* eslint-disable import/prefer-default-export */
-const formData = require('form-data');
-const Mailgun = require('mailgun.js');
+const formData = require("form-data");
+const Mailgun = require("mailgun.js");
 
-const HelperUtils = require('./HelperUtils');
-
-const MailTemplate = require('../templates/HtmlTemplates');
+const HelperUtils = require("./HelperUtils");
+const MailTemplate = require("../templates/HtmlTemplates");
 
 const { print } = HelperUtils;
 const { MailBody } = MailTemplate;
@@ -24,19 +23,17 @@ const sendEmailWithMailGunPackage = async (payload, withCC = true) => {
     } = payload;
     print(payload);
 
+    // @ts-ignore
     const mailgun = new Mailgun(formData);
-    const client = mailgun.client({ username: 'api', key: API_KEY });
+    const client = mailgun.client({ username: "api", key: API_KEY });
 
-    const recognizedReceipients = [
-      'developer.mailer2021@gmail.com',
-      'wakpomeyoma@gmail.com',
-      // 'ayooluwa.olosunde@gmail.com',
-      'kelaniopemercy@gmail.com',
-      // 'jaystance25@gmail.com'
-    ];
-    const receipientIndex = Math.floor(Math.random() * recognizedReceipients.length);
-    const chosenEmail = (recognizedReceipients.includes(receipientEmail))
-      ? receipientEmail : (() => {
+    const recognizedReceipients = ["developer.mailer2021@gmail.com"];
+    const receipientIndex = Math.floor(
+      Math.random() * recognizedReceipients.length
+    );
+    const chosenEmail = recognizedReceipients.includes(receipientEmail)
+      ? receipientEmail
+      : (() => {
         print(origin);
         // if (!origin) {
         return recognizedReceipients[receipientIndex];
@@ -56,31 +53,42 @@ const sendEmailWithMailGunPackage = async (payload, withCC = true) => {
         //     return recognizedReceipients[0];
         // }
       })();
+    /**
+     * @type {{ from: string; to: string; subject: string; html: string; cc?: string[] }}
+     */
     const messageData = {
       from: `White Label <${SENDER_EMAIL}>`,
       to: chosenEmail,
       subject,
       html: MailBody({
         subject,
-        content
+        content,
       }),
     };
 
     if (withCC) {
-      messageData.cc = recognizedReceipients.filter((each) => each !== chosenEmail);
+      messageData.cc = recognizedReceipients.filter(
+        (each) => each !== chosenEmail
+      );
     }
 
     const res = await client.messages.create(DOMAIN, messageData);
-    print({ emailResponse: res, receipientEmail, chosenEmail }, { logging: true });
+    print(
+      { emailResponse: res, receipientEmail, chosenEmail },
+      { logging: true }
+    );
     return res;
   } catch (error) {
-    print(error, { type: 'error' });
+    print(error, { type: "error" });
     return error;
   }
 };
 
 module.exports = {
   sendEmail: sendEmailWithMailGunPackage,
+  /**
+   * @param {any} payload
+   */
   sendSMS: async (payload) => {
     // const {
     //   senderPhone, receipientPhone, subject, content

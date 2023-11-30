@@ -14,9 +14,7 @@ dayjs.extend(timezone);
 const DEFAULT_FILTERS = {
   page: 1,
   limit: 10,
-  startDate: new Date(1920, 0, 1, 24).toISOString(),
-  minWalletBalance: 0,
-  maxWalletBalance: 1e20,
+  from: new Date(1920, 0, 1, 24).toISOString(),
   order: ["createdAt:DESC"], // Sort by latest
 };
 
@@ -600,7 +598,7 @@ module.exports = {
   combination: (n, k) => factorial(n) / (factorial(n - k) * factorial(k)),
   /**
    * @param {{[x: string]: any}} query
-   * @returns {{[x: string]: any}}
+   * @returns {import("../types").QueryFilter}
    */
   mapAsFilter: (query) => {
     const userFilters = query;
@@ -661,6 +659,9 @@ module.exports = {
     });
 
     // Merge Default filters and user filters
+    /**
+     * @type {import("../types").QueryFilter}
+     */
     const filters = { ...HelperUtils.DEFAULT_FILTERS, ...userFilters };
     // HelperUtils.printToFile(filters);
     return filters;

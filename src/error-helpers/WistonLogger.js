@@ -36,10 +36,15 @@ const logger = createLogger({
 });
 
 // get lets from morgan and output to a wiston file
+// @ts-ignore
 logger.stream = {
-  // eslint-disable-next-line no-unused-vars
+  /**
+   * @param {any} message
+   * @param {any} encoding
+   */
+  // @ts-ignore
   write(message, encoding) {
-    logger.info(`${message}`);
+    logger.info(`${message}`, { encoding });
   },
 };
 

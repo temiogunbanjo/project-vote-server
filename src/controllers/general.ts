@@ -11,39 +11,23 @@ const {
   HttpStatusCode,
   HelperUtils,
   AccessHandler: Access,
-  PaymentHandler,
   sendSuccessResponse,
   sendErrorResponse,
-  datasource,
+  db,
   APP_ROLES,
   ph,
 } = require("./imports");
 // const { sequelize } = require("../../models");
 // const { dummy } = require("../core/payment/CommissionHandler");
 
-
-
 module.exports = {
   /** Health Check Controller */
   async healthCheck(req: Request, res: Response, next: NextFunction) {
     try {
-      // const filters = HelperUtils.mapAsFilter({});
-      // delete filters.limit;
-
-      // const [users] = await sequelize.query('SELECT * FROM white_label.Admin');
-
-      // users.forEach(async (user) => {
-      //   HelperUtils.print({ id: user.adminId, name: user.firstname });
-      //   const update = await datasource.updateAdmin(
-      //     user.adminId, { password: ph.encryptV2(ph.decrypt(user.password)) }
-      //   );
-      //   console.log({ update });
-      // });
-
       return res.status(HttpStatusCode.OK).send({
         status: "running",
         description: `Service is up and running on ${process.env.NODE_ENV} environment`,
-        statuscode: HttpStatusCode.OK,
+        statuscode: HttpStatusCode.OK
       });
     } catch (error) {
       return next(error);
@@ -147,13 +131,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   // eslint-disable-next-line consistent-return
   async getScriptLogs(req: Request, res: Response, next: NextFunction) {
     try {
@@ -182,13 +159,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async getPerformanceLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const passkey = req.query.key;
@@ -219,13 +189,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   // eslint-disable-next-line consistent-return
   async getTransactionLogs(req: Request, res: Response, next: NextFunction) {
     try {
@@ -261,13 +224,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns {Promise<any>} Response
-   */
   async clearLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const passkey = req.body.key;
@@ -292,13 +248,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async clearPerformanceLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const passkey = req.body.key;
@@ -323,13 +272,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async clearScriptLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const passkey = req.body.key;
@@ -354,13 +296,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async clearTransactionLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const passkey = req.body.key;
@@ -385,13 +320,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async getRNGLogs(req: Request, res: Response, next: NextFunction) {
     try {
       const stats = fs.statSync("./src/utils/RNG.js");
@@ -409,13 +337,6 @@ module.exports = {
     }
   },
 
-  /**
-   * @method
-   * @param {import('express').Request & { file?: any }} req
-   * @param {import('express').Response} res
-   * @param {import('express').NextFunction} next
-   * @returns Response
-   */
   async upload(req: FileRequest, res: Response, next: NextFunction) {
     try {
       // here
@@ -444,38 +365,6 @@ module.exports = {
         data: {
           imageUrl: `${staticUploadPath}/${req.file.filename}`,
         },
-      });
-    } catch (error) {
-      return next(error);
-    }
-  },
-
-  async fetchAnalytics(req: Request, res: Response, next: NextFunction) {
-    try {
-      const analytics = await datasource.fetchAnalytics();
-
-      return sendSuccessResponse(res, HttpStatusCode.OK, {
-        message: "Fetched analytics successfully",
-        data: analytics,
-      });
-    } catch (error) {
-      return next(error);
-    }
-  },
-
-  async fetchListOfBanks(req: Request, res: Response, next: NextFunction) {
-    try {
-      const listOfBanks = await PaymentHandler.getBanks();
-      if (!listOfBanks) {
-        return sendErrorResponse(
-          res,
-          HttpStatusCode.INTERNAL_SERVER,
-          "Failed to retrieve bank list"
-        );
-      }
-      return sendSuccessResponse(res, HttpStatusCode.OK, {
-        message: "Fetched successfully",
-        data: listOfBanks.data,
       });
     } catch (error) {
       return next(error);

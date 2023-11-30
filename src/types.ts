@@ -9,4 +9,11 @@ interface FileRequest extends Request {
   file?: any;
 }
 
-export { AuthorizedRequest, FileRequest };
+type QueryFilter = {
+  page: Number;
+  limit: Number;
+  from: string | Date;
+  order: string[]; // Sort by latest
+}
+
+export { AuthorizedRequest, FileRequest, QueryFilter };

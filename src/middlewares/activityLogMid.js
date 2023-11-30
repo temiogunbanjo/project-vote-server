@@ -1,20 +1,21 @@
 /* eslint-disable class-methods-use-this */
 /* eslint-disable no-underscore-dangle */
-const fs = require('fs');
-const appRoot = require('app-root-path');
+const fs = require("fs");
+const appRoot = require("app-root-path");
 
-const HelperUtils = require('../utils/HelperUtils');
+const HelperUtils = require("../utils/HelperUtils");
 
 /**
  * @class
  */
 class ActivityLogger {
+  print = HelperUtils.print;
+
   /**
    * @constructor
-   * @param {Request} request
+   * @param {import("express").Request} request
    */
   constructor(request) {
-    this.print = HelperUtils.print;
     this.request = request;
   }
 
@@ -26,6 +27,7 @@ class ActivityLogger {
       `${appRoot}/logs/adminActivity.log`,
       `${JSON.stringify(activity)}\n`,
       (err) => {
+        // @ts-ignore
         if (err) ActivityLogger.print(err);
       }
     );
@@ -36,34 +38,38 @@ class ActivityLogger {
    * @returns string
    */
   _convertUrlSegmentToString(actionName) {
+    /**
+     * @param {string} action
+     * @returns {string}
+     */
     const o = (action) => actionName
-      .split('-')
-      .map((el, index) => {
+      .split("-")
+      .map((/** @type {string} */ el, /** @type {number} */ index) => {
         switch (index) {
           case 0:
             return action;
 
           default:
-            return el.replace('-', ' ').trim();
+            return el.replace("-", " ").trim();
         }
       })
-      .join(' ');
+      .join(" ");
 
     switch (true) {
       case actionName.match(/create-.*/gi) !== null:
-        return o('created');
+        return o("created");
 
       case actionName.match(/fetch-.*/gi) !== null:
-        return o('fetched');
+        return o("fetched");
 
       case actionName.match(/update-.*/gi) !== null:
-        return o('updated');
+        return o("updated");
 
       case actionName.match(/delete-.*/gi) !== null:
-        return o('deleted');
+        return o("deleted");
 
       default:
-        return '';
+        return "";
     }
   }
 
@@ -75,16 +81,16 @@ class ActivityLogger {
   _getUserActionParameters(request = this.request) {
     // console.log(request.route);
     const splittedUrlFormat = request.route.path
-      .split('/')
-      .filter((eachPath) => eachPath.length >= 1);
+      .split("/")
+      .filter((/** @type {string | any[]} */ eachPath) => eachPath.length >= 1);
 
     const splittedUrl = request.url
-      .split('?')[0]
-      .split('/')
-      .filter((eachPath) => eachPath.length >= 1);
+      .split("?")[0]
+      .split("/")
+      .filter((/** @type {string | any[]} */ eachPath) => eachPath.length >= 1);
 
-    let actionCategory = '';
-    let actionName = '';
+    let actionCategory = "";
+    let actionName = "";
     let pathParameter = [];
 
     let lastUrlSubstringIndex = 0;
@@ -100,11 +106,13 @@ class ActivityLogger {
           : `${splittedUrlFormat[lastUrlSubstringIndex]} ${urlSubsection}`;
       } else {
         lastUrlSubstringIndex = index;
-        actionCategory += actionCategory === '' ? urlSubsection : `/${urlSubsection}`;
+        actionCategory
+          += actionCategory === "" ? urlSubsection : `/${urlSubsection}`;
       }
     }
 
-    pathParameter = pathParameter.join(', ');
+    // @ts-ignore
+    pathParameter = pathParameter.join(", ");
     const actionString = this._convertUrlSegmentToString(actionName);
 
     const retValue = {
@@ -139,7 +147,7 @@ class ActivityLogger {
     const { actionString, pathParameter } = payload.action;
 
     const adminWhoPerformedAction = `${payload.name} (${
-      payload.adminId || ''
+      payload.adminId || ""
     })`;
 
     const actorParameters = (() => {
@@ -154,32 +162,39 @@ class ActivityLogger {
         case bodyParamList.length > 0:
           return `using parameters (${bodyParamList
             .map((key) => `${key}=${request.body[key]}`)
-            .join(', ')})`;
+            .join(", ")})`;
 
         default:
-          return '';
+          return "";
       }
     })();
 
     const actionPerformedByAdmin = `${
-      actionString !== ''
+      actionString !== ""
         ? `${actionString} ${actorParameters}`
         : `made a ${payload.requestMethod} request to ${
           payload.action.actionName
         } endpoint ${
-          actorParameters ? `with parameter(s): (${actorParameters})` : ''
+          actorParameters ? `with parameter(s): (${actorParameters})` : ""
         }`
     }`
       .trim()
-      .replace(/\s+/g, ' ');
+      .replace(/\s+/g, " ");
 
+    // @ts-ignore
     payload.actionString = `${adminWhoPerformedAction} ${actionPerformedByAdmin} on ${payload.date}`;
-
+    // @ts-ignore
     payload.action = JSON.stringify(payload.action);
     return payload;
   }
 }
 
+/**
+ *
+ * @param {import("express").Request} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
 module.exports = async (req, res, next) => {
   try {
     const logger = new ActivityLogger(req);

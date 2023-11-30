@@ -33,7 +33,7 @@ LoggerEvent.on("write-to-file", async (eventInfo) => {
         });
       }
     });
-  } catch (error) {
+  } catch (/** @type {any} */error) {
     HelperUtils.print(`Logger > ${"write-to-file"}: ${error.message}`, {
       logging: true,
     });
@@ -48,6 +48,7 @@ const GeneralLogger = {
   options: { MAX_FILE_SIZE: 8 * 1024 * 1024, path: "wallet.log" },
   /**
    * @param {Object} activity
+   * @param {string} location
    */
   async writeToFile(activity, location) {
     LoggerEvent.emit("write-to-file", {
@@ -58,9 +59,7 @@ const GeneralLogger = {
 
   /**
    * @param {*} userId
-   * @param {*} transaction
    * @param {*} response
-   * @param {boolean} useNewLine
    * @returns Object
    */
   _createPayload(userId, response) {
@@ -75,6 +74,12 @@ const GeneralLogger = {
   },
 };
 
+/**
+ *
+ * @param {string} path
+ * @param {string} userId
+ * @param {any} response
+ */
 module.exports = async (path, userId, response) => {
   try {
     const logger = GeneralLogger;

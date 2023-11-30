@@ -9,8 +9,8 @@ const Patterns = require('../templates/PatternTemplates');
 const SendResponses = require('../utils/sendResponses');
 
 const { sendErrorResponse } = SendResponses;
-const sqlInjectionSanitizer = (value) => (!value ? value : value.replace(/--/g, ''));
-const sqlInjectionValidator = (value) => (!value ? !!value : value.match(/--/g) === null);
+const sqlInjectionSanitizer = (/** @type {string} */ value) => (!value ? value : value.replace(/--/g, ''));
+const sqlInjectionValidator = (/** @type {string | null} */ value) => (!value ? !!value : value.match(/--/g) === null);
 
 /**
  * @class
@@ -97,6 +97,7 @@ class ValidatorMiddleWare {
       .optional()
       .trim()
       .escape()
+      // @ts-ignore
       .isAlpha('en-US', { ignore: [/\s+|-|\d/g] })
       .isLength({ min: 3 })
       .toLowerCase(),
@@ -104,6 +105,7 @@ class ValidatorMiddleWare {
       .optional()
       .trim()
       .escape()
+      // @ts-ignore
       .isAlpha('en-US', { ignore: [/\s+|-|\d/g] })
       .isLength({ min: 3 })
       .toLowerCase(),
@@ -306,6 +308,7 @@ class ValidatorMiddleWare {
         .withMessage(`${aliasedName} parameter required`)
         .trim()
         .escape()
+        // @ts-ignore
         .isAlpha('en-US', { ignore: [/\s+|-|\d/g] })
         .isLength({ min: 3 })
         .toLowerCase(),
@@ -342,12 +345,15 @@ class ValidatorMiddleWare {
   }
 
   /**
-   * @param {Array} params
+   * @param {Array<any>} params
    * @returns Any
    */
   static selectValidation(...params) {
     // params is an array of arguments which specify the parameters to validate in the request
     // VALIDATION_CHAIN is the final array of validators that would be passed to express validator
+    /**
+     * @type {any[]}
+     */
     const VALIDATION_CHAIN = [];
     // KNOWN_PARAMETERS is an array of all defined parameters used in the app
     const KNOWN_PARAMETERS = [
@@ -383,6 +389,7 @@ class ValidatorMiddleWare {
         .withMessage('name parameter required')
         .trim()
         .escape()
+        // @ts-ignore
         .isAlpha('en-US', { ignore: [/\s+|-|\d/g] })
         .withMessage('only alphabets allowed')
         .isLength({ min: 3 })
@@ -502,6 +509,7 @@ class ValidatorMiddleWare {
       */
       VALIDATION_CHAIN.push(
         isInKnownParameters
+          // @ts-ignore
           ? PARAMETER_VALIDATIONS[eachParam]
           : this.handleAliases(eachParam)
       );
@@ -520,6 +528,7 @@ class ValidatorMiddleWare {
   static validateRequest(req, res, next) {
     const errors = validationResult(req);
     const errorObject = errors.array()[0];
+    // @ts-ignore
     return errors.isEmpty() ? next() : sendErrorResponse(res, 422, errorObject);
   }
 }

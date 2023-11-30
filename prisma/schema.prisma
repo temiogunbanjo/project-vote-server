@@ -59,13 +59,13 @@ model Candidates {
   id             String   @id @default(uuid()) @map("_id")
   fullname       String
   imageUrl       String
-  totalVoteCount Int      @default(0)
-  code           Int      @unique
-  event          Events   @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId        String
+  totalVoteCount Int        @default(0)
+  code           Int        @unique
+  category       Categories @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId     String
   votes          Votes[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
 }
 
 model SchoolNames {
@@ -79,10 +79,22 @@ model Events {
   school       Schools
   availability Availability
   paymentType  PaymentType
-  candidates   Candidates[]
-  pricePerVote Int // In GHc     
-  votes        Votes[]
+  categories   Categories[]
   ongoing      Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Categories {
+  id           String @id @default(uuid()) @map("_id")
+  name         String @unique
+  description  String
+  event        Events @relation(fields: [eventId], references: [id], onDelete: Cascade)
+  eventId      String
+  availability Availability
+  candidates   Candidates[]    
+  votes        Votes[]
+  // winner       Candidates @relation(fields: [eventId], references: [id], onDelete: Cascade)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 }
@@ -101,8 +113,8 @@ model Votes {
   voteCount   Int
   candidate   Candidates? @relation(fields: [candidateId], references: [id], onDelete: Cascade)
   candidateId String
-  event       Events?     @relation(fields: [eventId], references: [id], onDelete: Cascade)
-  eventId     String
+  category    Categories? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  categoryId  String
   payment     Payments? 
   createdAt   DateTime    @default(now())
 }

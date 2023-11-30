@@ -11,8 +11,6 @@ const HttpStatusCode = require("../error-helpers/Statuscode");
 const cloudUploader = require("../utils/upload");
 const winston = require("../error-helpers/WistonLogger");
 const Access = require("../core/roles/AccessHandler");
-const PaymentHandler = require("../core/payment/PaymentHandler");
-
 const db = require("../database/db");
 
 const {
@@ -30,30 +28,16 @@ const HtmlTemplates = require("../templates/HtmlTemplates");
 const {
   staticUploadPath,
   TRANSACTION_TYPES,
-  BONUS_STATUSES,
-  BONUS_TYPES,
-  SUSPENSION_TYPES,
   WALLET_TYPES,
-  DRAW_METHODS,
   weekDayNames,
-  MAX_SELECTION_ALLOWED,
-  WINNING_REDEMPTION_METHODS
 } = require("../globals");
-
-const datasource = db;
 
 module.exports = {
   APP_ROLES,
   VALID_APP_ROLES,
   TRANSACTION_TYPES,
-  BONUS_STATUSES,
-  BONUS_TYPES,
-  SUSPENSION_TYPES,
   WALLET_TYPES,
-  DRAW_METHODS,
   DEFAULT_FILTERS,
-  WINNING_REDEMPTION_METHODS,
-  MAX_SELECTION_ALLOWED,
   staticUploadPath,
   weekDayNames,
   Patterns,
@@ -72,9 +56,8 @@ module.exports = {
   sendEmail,
   winston,
   AccessHandler: Access,
-  PaymentHandler,
   cloudUploader,
   User,
-  datasource,
+  db,
 };
 export {};

@@ -1,6 +1,8 @@
 interface DatasourceInterface {
+  client: any;
   connect(): any;
-  disconnect(client: any): Promise<void> | void;
+  disconnect(): Promise<void> | void;
+  errorHandler(error: any): Promise<void>;
 }
 
 export { DatasourceInterface };

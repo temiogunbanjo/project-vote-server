@@ -4,7 +4,7 @@
 class BaseError extends Error {
   /**
    *
-   * @param {strig} name
+   * @param {string} name
    * @param {string} httpCode,
    * @param {string} isOperational,
    * @param {string} description,
