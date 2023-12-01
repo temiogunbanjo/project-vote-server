@@ -1,8 +1,10 @@
 const generalControllers = require("./general");
-const campaignController = require('./campaigns');
+const campaignControllers = require('./campaigns');
+const schoolControllers = require('./schools');
 
 
 export default {
   ...generalControllers,
-  ...campaignController
+  ...campaignControllers,
+  ...schoolControllers
 }

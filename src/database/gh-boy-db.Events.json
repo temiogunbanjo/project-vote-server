@@ -1,0 +1,62 @@
+[
+  {
+    "_id": "5487ca47-02d2-4ec3-a6d3-2d55b26761f1",
+    "name": "Best Female Designs",
+    "school": "FASHION",
+    "availability": "STUDENTS",
+    "paymentType": "PAID",
+    "pricePerVote": 1,
+    "ongoing": true,
+    "createdAt": {
+      "$date": "2023-10-27T10:36:22.446Z"
+    },
+    "updatedAt": {
+      "$date": "2023-10-27T10:41:46.341Z"
+    }
+  },
+  {
+    "_id": "d5bfaa4c-cf9c-45ae-b7b0-ff2a480e7fb7",
+    "name": "Best Male Clothing Made",
+    "school": "FASHION",
+    "availability": "NONSTUDENTS",
+    "paymentType": "PAID",
+    "pricePerVote": 1,
+    "ongoing": true,
+    "createdAt": {
+      "$date": "2023-10-27T10:36:23.086Z"
+    },
+    "updatedAt": {
+      "$date": "2023-10-27T10:41:46.341Z"
+    }
+  },
+  {
+    "_id": "53d3d29a-3518-479c-b3ff-5b3525b3753a",
+    "name": "Best Ankara Designs",
+    "school": "FASHION",
+    "availability": "EVERYONE",
+    "paymentType": "PAID",
+    "pricePerVote": 1,
+    "ongoing": true,
+    "createdAt": {
+      "$date": "2023-10-27T10:36:23.254Z"
+    },
+    "updatedAt": {
+      "$date": "2023-10-27T10:41:46.341Z"
+    }
+  },
+  {
+    "_id": "a47df8ed-ceda-4f70-9f2d-e7f0059b570b",
+    "name": "Best Cake Designs",
+    "school": "CATERING",
+    "availability": "STUDENTS",
+    "paymentType": "UNPAID",
+    "pricePerVote": 1,
+    "ongoing": true,
+    "createdAt": {
+      "$date": "2023-10-27T10:36:22.445Z"
+    },
+    "updatedAt": {
+      "$date": "2023-10-27T10:41:46.341Z"
+    }
+  }
+]

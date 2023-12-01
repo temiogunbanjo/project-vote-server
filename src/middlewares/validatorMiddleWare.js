@@ -534,5 +534,3 @@ class ValidatorMiddleWare {
 }
 
 module.exports = ValidatorMiddleWare;
-
-// export default validationResult;

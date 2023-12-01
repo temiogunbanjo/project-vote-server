@@ -1,11 +1,11 @@
+const Validator = require("../middlewares/validatorMiddleWare");
+
 const express = require("express");
 const { default: controllers } = require("../controllers");
-const adminLogMid = require("../middlewares/activityLogMid");
 const authmid = require("../middlewares/authMid");
 const apiKeyMid = require("../middlewares/apiKeyMid");
+const adminLogMid = require("../middlewares/adminMid");
 const upload = require("../middlewares/multerMiddleware");
-const Validator = require("../middlewares/validatorMiddleWare");
-// const { useAccessLog } = require('../middlewares/analytics');
 
 const router = express.Router();
 
@@ -29,8 +29,35 @@ router.post(
   controllers.upload
 );
 
+// AUTH
+router.post(
+  "/auth",
+  adminLogMid,
+  Validator.selectValidation("username", "password"),
+  Validator.validateRequest,
+  controllers.authorize
+);
+
 // CAMPAIGNS
+router.post("/campaign", adminLogMid, controllers.fetchAllCampaigns);
 router.get("/campaigns", controllers.fetchAllCampaigns);
-router.get("/campaigns/:campaignId", controllers.fetchAllCampaigns);
+router.get("/campaign/:campaignId", controllers.fetchSingleCampaign);
+
+// CATEGORIES
+router.post(
+  "/campaign/category",
+  // adminLogMid,
+  Validator.selectValidation("campaignId", "name", "description"),
+  Validator.validateRequest,
+  controllers.createCategory
+);
+router.get("/campaigns/categories", controllers.fetchAllCategories);
+router.get(
+  "/campaign/:campaignId/categories",
+  controllers.fetchCampaignCategories
+);
+
+// SCHOOLS
+router.get("/schools", controllers.fetchAllSchools);
 
 module.exports = router;

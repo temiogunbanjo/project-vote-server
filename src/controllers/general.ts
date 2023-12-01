@@ -320,22 +320,29 @@ module.exports = {
     }
   },
 
-  async getRNGLogs(req: Request, res: Response, next: NextFunction) {
+  async authorize(req: Request, res: Response, next: NextFunction) {
     try {
-      const stats = fs.statSync("./src/utils/RNG.js");
-      const { mtime } = stats;
-      HelperUtils.print(mtime);
+      const { username, password } = req.body;
+
+      const dbResponse = await db.fetchAuthUser(username);
+
+      if (!dbResponse) {
+        return sendErrorResponse(res, HttpStatusCode.NOT_FOUND, 'User not found');
+      }
+
+      if (!ph.compareHashAndString(dbResponse.password, password)) {
+        return sendErrorResponse(res, HttpStatusCode.UNAUTHORIZED, 'Incorrect password');
+      }
 
       return sendSuccessResponse(res, HttpStatusCode.OK, {
-        message: "RNG logs fetched succesfully",
-        data: {
-          lastModified: mtime,
-        },
+        message: "Schools retrieved successfully",
+        payload: dbResponse
       });
     } catch (error) {
       return next(error);
     }
   },
+
 
   async upload(req: FileRequest, res: Response, next: NextFunction) {
     try {
