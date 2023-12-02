@@ -25,7 +25,7 @@ const options = {
 
 const logger = createLogger({
   format: combine(
-    label({ label: 'Lottery' }),
+    label({ label: 'GH Vote' }),
     timestamp(),
     prettyPrint(),
   ),

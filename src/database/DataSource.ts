@@ -3,6 +3,7 @@ import { PrismaClient } from "@prisma/client";
 import { DatasourceInterface } from "./DatasourceInterface";
 import CategorySchema from "../schemas/CategorySchema";
 import { GenericObject, QueryFilter } from "../types";
+import Candidate from "../schemas/CandidateSchema";
 
 const prisma = new PrismaClient();
 
@@ -67,6 +68,7 @@ class Datasource implements DatasourceInterface {
     process.exit(1);
   }
 
+  // SCHOOLS
   async fetchAuthUser(queryParam: string) {
     try {
       const res = await prisma?.users.findUnique({
@@ -91,6 +93,7 @@ class Datasource implements DatasourceInterface {
     }
   }
 
+  // EVENTS
   async fetchOneEvent(queryId: string) {
     try {
       const res = await prisma?.events.findUnique({
@@ -98,7 +101,11 @@ class Datasource implements DatasourceInterface {
           id: queryId,
         },
         include: {
-          categories: true,
+          categories: {
+            include: {
+              candidates: true
+            }
+          },
         },
       });
       console.log(res);
@@ -115,7 +122,11 @@ class Datasource implements DatasourceInterface {
 
       const res = await prisma?.events.findMany({
         include: {
-          categories: true,
+          categories: {
+            include: {
+              candidates: true
+            }
+          },
         },
         ...PRISMA_FILTER_OPTIONS,
       });
@@ -139,6 +150,28 @@ class Datasource implements DatasourceInterface {
     }
   }
 
+  async fetchOneCategory(categoryId: string) {
+    try {
+      const res = await prisma?.categories.findUnique({
+        where: {
+          id: categoryId,
+        },
+        include: {
+          event: true,
+          candidates: {
+            include: {
+              votes: true
+            }
+          }
+        }
+      });
+      console.log(res);
+      return res;
+    } catch (error) {
+      await this.errorHandler(error);
+    }
+  }
+
   async fetchAllCategories(queryId: string | undefined, filters: QueryFilter) {
     try {
       const PRISMA_FILTER_OPTIONS =
@@ -147,6 +180,7 @@ class Datasource implements DatasourceInterface {
       const res = await prisma?.categories.findMany({
         include: {
           event: true,
+          candidates: true
         },
         ...PRISMA_FILTER_OPTIONS,
         where: {
@@ -155,9 +189,22 @@ class Datasource implements DatasourceInterface {
             { eventId: queryId }
           ],
           AND: {
-            
+
           }
         },
+      });
+      console.log(res);
+      return res;
+    } catch (error) {
+      await this.errorHandler(error);
+    }
+  }
+
+  // CANDIDATES
+  async addCandidate(newCandidate: Candidate) {
+    try {
+      const res = await prisma?.candidates.create({
+        data: newCandidate,
       });
       console.log(res);
       return res;
@@ -180,6 +227,7 @@ class Datasource implements DatasourceInterface {
     }
   }
 
+  // SCHOOLS
   async fetchAllSchools(filters: QueryFilter) {
     try {
       const res = await prisma?.schoolNames.findMany({});

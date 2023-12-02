@@ -4,6 +4,7 @@ const stream = require("stream");
 const appRootPath = require("app-root-path");
 import { Request, Response, NextFunction } from "express";
 import Category, { Availability } from "../schemas/CategorySchema";
+import Candidate from "../schemas/CandidateSchema";
 // import { AuthorizedRequest, FileRequest } from '../types';
 
 const {
@@ -77,6 +78,68 @@ module.exports = {
 
       return sendSuccessResponse(res, HttpStatusCode.CREATED, {
         message: "Category created successfully",
+        payload: dbResponse,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  async fetchSingleCategory(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { categoryId } = req.params;
+      console.log(categoryId);
+      const dbResponse = await db.fetchOneCategory(categoryId);
+
+      if (!dbResponse) {
+        return sendErrorResponse(
+          res,
+          HttpStatusCode.NOT_FOUND,
+          "No such category"
+        );
+      }
+
+      return sendSuccessResponse(res, HttpStatusCode.OK, {
+        message: "Category retrieved successfully",
+        payload: dbResponse,
+      });
+    } catch (error) {
+      return next(error);
+    }
+  },
+
+  async addNewCandidateToACategory(
+    req: Request,
+    res: Response,
+    next: NextFunction
+  ) {
+    try {
+      const { fullname, imageUrl = "", categoryId } = req.body;
+
+      const existingCategory = await db.fetchOneCategory(categoryId);
+
+      if (!existingCategory) {
+        return sendErrorResponse(
+          res,
+          HttpStatusCode.NOT_FOUND,
+          "No such category"
+        );
+      }
+
+      const newCandidate = new Candidate(
+        fullname,
+        imageUrl,
+        existingCategory.id
+      );
+
+      const dbResponse = await db.addCandidate(newCandidate);
+
+      if (!dbResponse) {
+        return sendErrorResponse(res, HttpStatusCode.BAD_REQUEST, "Failed");
+      }
+
+      return sendSuccessResponse(res, HttpStatusCode.CREATED, {
+        message: "Candidate added successfully",
         payload: dbResponse,
       });
     } catch (error) {

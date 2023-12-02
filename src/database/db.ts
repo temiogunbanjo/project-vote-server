@@ -1,6 +1,7 @@
 import { QueryFilter } from "../types";
 import { Datasource } from "./DataSource";
 import CategorySchema from "../schemas/CategorySchema";
+import Candidate from "../schemas/CandidateSchema";
 
 const mongoSource = new Datasource();
 
@@ -35,11 +36,19 @@ class DB {
     return this.datasource?.createCategory(newCategory);
   }
 
+  async fetchOneCategory(categoryId: string) {
+    return this.datasource?.fetchOneCategory(categoryId);
+  }
+
   async fetchAllCategories(queryId: string | undefined, filters: QueryFilter) {
     return this.datasource?.fetchAllCategories(queryId, filters);
   }
 
   // CANDIDATES
+  async addCandidate(newCandidate: Candidate) {
+    return this.datasource?.addCandidate(newCandidate);
+  }
+
   async fetchAllCandidates(filters: QueryFilter) {
     return this.datasource?.fetchAllCandidates(filters);
   }

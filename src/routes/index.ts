@@ -42,19 +42,33 @@ router.post(
 router.post("/campaign", adminLogMid, controllers.fetchAllCampaigns);
 router.get("/campaigns", controllers.fetchAllCampaigns);
 router.get("/campaign/:campaignId", controllers.fetchSingleCampaign);
+router.put("/campaign/:campaignId", controllers.fetchSingleCampaign);
 
 // CATEGORIES
 router.post(
-  "/campaign/category",
+  "/campaigns/category",
   // adminLogMid,
   Validator.selectValidation("campaignId", "name", "description"),
   Validator.validateRequest,
   controllers.createCategory
 );
-router.get("/campaigns/categories", controllers.fetchAllCategories);
+router.get(
+  "/campaigns/category/:categoryId",
+  controllers.fetchSingleCategory
+);
 router.get(
   "/campaign/:campaignId/categories",
   controllers.fetchCampaignCategories
+);
+router.get("/campaigns/categories", controllers.fetchAllCategories);
+
+// CANDIDATES
+router.post(
+  "/campaigns/category/add-candidate",
+  // adminLogMid,
+  Validator.selectValidation("fullname", "categoryId"),
+  Validator.validateRequest,
+  controllers.addNewCandidateToACategory
 );
 
 // SCHOOLS
